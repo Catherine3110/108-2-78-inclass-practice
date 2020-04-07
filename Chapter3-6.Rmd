@@ -1,0 +1,131 @@
+
+```{r setup, include=FALSE}
+# 10位學生的主系
+majors10_char <- c('經濟學系','社會學系','社會學系','經濟學系','經濟學系','社會學系','經濟學系','經濟學系','經濟學系','社會學系')
+
+typeof(majors10_char)
+class(majors10_char)
+```
+
+```{r cars}
+majors10_factor <- factor(majors10_char)
+# 或
+majors10_factor <- factor(
+  c('經濟學系','社會學系','社會學系','經濟學系','經濟學系','社會學系','經濟學系','經濟學系','經濟學系','社會學系')
+)
+
+typeof(majors10_factor)
+class(majors10_factor)
+```
+
+```{r pressure, echo=FALSE}
+library(lubridate)
+tpeTime <- ymd_hms("2020-03-18 13:52:40",
+        tz="Asia/Taipei")
+```
+
+```{r}
+tpeTime <- c("2020-03-18 13:52:40",
+             "2020-03-11 03:12:40")
+tpeTime <- 
+  ymd_hms(
+    tpeTime,
+    tz="Asia/Taipei"
+    )
+```
+
+```{r}
+browseURL("https://docs.google.com/spreadsheets/d/1EAG49qDKPWWi0ebkVr29TLrvVnoBPfkvxYY-J3xLAHY/edit#gid=458686645")
+```
+
+```{r}
+stdentTime <- c(
+  ymd_hms("2020-03-11T06:56:17Z"),
+  ymd_hms("2020-03-11 03:12:40",tz="Asia/Taipei"),
+  ymd_hms("2020-03-11 13:52:40",tz="Asia/Taipei"))
+
+```
+
+```{r}
+library(lubridate)
+`小明交易` <- list(
+  ymd_hms("2020-03-31T13:40:55Z"),
+  "一芳",
+  2,
+  "水果茶")
+print(`小明交易`)
+```
+
+```{r}
+`小明108學年課表` <- list(
+  `108學年第1學期`=list(
+    semester=c("108-1"),
+    courses=c("高級會計學","高等統計學")
+     ),
+  `108學年第2學期`=list(
+    semester=c("108-2"),
+    courses=c("食在拉丁美洲")
+     )
+)
+print(`小明108學年課表`)
+```
+
+```{r}
+commit <- list(
+  author = list(name="Martin老師",
+                email="mtlin@gm.ntpu.edu.tw",
+                time=ymd_hms("2020-03-25T07:17:40Z")),
+  committer = list(name="emilyluckey",
+                   email="emily007@gmail.com",
+                   time=ymd_hms("2020-03-26T08:18:40Z")),
+  message = "update"
+)
+print(commit)
+```
+
+```{r}
+library(jsonlite)
+toJSON(commit)
+```
+
+```{r}
+`小明108學年各科成績` <- list(
+  `108學年第1學期成績`=list(
+    semester=c("108-1"),
+    courses=list(
+                list(
+                  name="個體經濟學",
+                  teacher="Alice",
+                  grade=85 ),
+                list(
+                  name="總體經濟學",
+                  teacher="Mark",
+                  grade=78)
+                 )
+                 ),
+  `108學年第2學期`=list(
+    semester=c("108-2"),
+    courses=list(
+                list(
+                  name="作業研究",
+                  teacher="Jason",
+                  grade=90)
+                 )
+                 )
+print(`小明108學年各科成績`)
+```
+
+```{r}
+WeatherForecast <- list(
+  today=ymd("2020-03-31"),
+  tomorrow=ymd("2020-04-01"),
+  Taipei=list(
+    MaxTemperature=25,
+    minTemperature=18),
+  NewTaipei=list(
+    MaxTemperature=24,
+    minTemperature=15)
+)
+print(WeatherForecast)
+```
+
