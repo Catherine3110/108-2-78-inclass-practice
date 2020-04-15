@@ -1,0 +1,151 @@
+1.
+```{r setup, include=FALSE}
+factor1 <- c('經濟學系','社會學系','會計系','金融系','法律系')
+length(factor1)
+```
+```{r}
+factor1[[1]]
+factor1[[3]]
+```
+```{r}
+factor1[c(1,4)]
+factor1[c(5,4,3,2,1)]
+```
+```{r}
+factor1[c(T,T,F,T,F)]
+```
+
+2.
+```{r}
+listexample <- 
+  list(
+    student="小明",
+    semester=list(
+      `108-1`=list(
+         list(
+           name="個體經濟學",
+           teacher="Alice",
+           grade=85),
+         list(
+           name="總體經濟學",
+           teacher="Mark",
+           grade=78)
+              ),
+        `108-2`=list(
+          list(
+            name="作業研究",
+            teacher="Jason",
+            grade=90)
+              )
+    )
+  )
+length(listexample)
+```
+```{r}
+listexample[[1]]
+listexample[[2]]
+```
+```{r}
+listexample$student
+listexample$semester
+```
+```{r}
+str(listexample)
+```
+```{r}
+listexample[["student"]]
+listexample$student
+
+listexample[["semester"]]
+listexample$semester
+```
+```{r}
+student <- "student"
+listexample[[student]]
+```
+2-1.
+```{r}
+str(listexample, max.level = 1)
+str(listexample[c(1,2)], max.level = 1)
+str(listexample[c(2,1)], max.level = 1)
+```
+```{r}
+listexample[["semester"]]
+listexample[c("student","semester")]
+listexample[c("semester","student")]
+```
+```{r}
+str(listexample)
+str(listexample[c(F,T)])
+str(listexample[["semester"]])
+str(listexample[c(T,T)])
+```
+2-2.[[]]、$-> 拿出某個物件值、[] -> 留下某個物件值
+(1)get1
+```{r}
+str(listexample, max.level = 3)
+```
+```{r}
+get1 <- listexample[["semester"]]
+get2 <- listexample["semester"]
+```
+```{r}
+str(get1)
+str(get2)
+```
+```{r}
+get1$`108-1` -> get1_layer1
+get1_layer1[[2]] -> get1_layer2
+get1_layer2$name
+```
+```{r}
+str(get1_layer1)
+```
+```{r}
+str(get1_layer2)
+```
+上述可寫成listexample[["semester"]]$`108-1`[[2]]$name
+(2)get2
+```{r}
+get2_layer1 <- get2[[1]]
+get2_layer2 <- get2_layer1[["108-2"]]
+get2_layer3 <- get2_layer2[[1]]
+get2_layer3$teacher
+```
+上述可寫成listexample["semester"][[1]]$`108-2`[[1]]$teacher
+          listexample["semester"][["semester"]]$`108-2`[[1]]$teacher
+                        ^無用
+```{r}
+get1 <- listexample[["semester"]]
+str(get1, max.level = 1)
+```
+```{r}
+get2 <- listexample["semester"]
+str(get2, max.level = 1)
+str(get2, max.level = 2)
+```
+3.
+```{r}
+numVector <- c(2,3,6,-1,4,2,6)
+select1 <- numVector[c(1,4)]; select1
+select2 <- select1[[1]]; select2
+```
+```{r}
+numVector[c(1,4)][[1]]
+```
+3-1.
+```{r}
+select3 <- numVector[c(T,T,F,T,F,F,T)]; select3
+select4 <- select3[c(1,4)]; select4
+```
+```{r}
+numVector[c(T,T,F,T,F,F,T)][c(1,4)]
+```
+4.
+```{r}
+majors <- c('經濟學系','社會學系','社工系','經濟學系','經濟學系')
+names <- c("小英","小美","大雄","小華","阿尼")
+gender <- c("F","F","M","M","M")
+majors[c(1,4,5)]
+```
+
