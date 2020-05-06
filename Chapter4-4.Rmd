@@ -1,0 +1,215 @@
+---
+4/29 Chapter4-4
+---
+example1
+```{r setup, include=FALSE}
+example <- list(
+  name=c("小明","小花","小新","美美"),
+  height=c(175,166,170,160),
+  weight=c(77,NA,60,43),
+  birthday=lubridate::ymd(c("1998-03-11","1999-12-22","1995-08-22","2001-10-10")),
+  hobby=c("美食 旅遊","旅遊 時尚","3C 美食","音樂 旅遊"),
+  residence=c("Taipei","New Taipei","Taichung","Kaohsiung"),
+  allowance=factor(c("0-1000","1001-2000","2000+","1001-2000")),
+  bloodType=c("A","B","B","O")
+)
+```
+比較符號>,<,<=,>=可用於數字比較、時間比較、可排序類別資料比較
+```{r}
+str(example[c("name","height")])
+pick_above170 <- example$height >= 170
+example$name[pick_above170]
+```
+下面的寫法只能看見true或false
+```{r pressure, echo=FALSE}
+example$height
+c(175, 166, 170, 160) >= 170
+```
+example1-2 誰1998年(含)以後出生
+```{r}
+example$birthday
+class(example$birthday)
+typeof(example$birthday)
+```
+```{r}
+print(example[c("name","birthday")])
+pick_after98 <- example$birthday >= lubridate::ymd("1998-01-01") #比較時class要相同
+example$name[pick_after98]
+```
+example1-3 誰零用錢大於1000
+factor資料可分成"有排序"以及"無排序"
+* 可排序： 以年齡層區分的類別、以所得級距區分的類別等
+* 不排序： 性別、學系等
+```{r}
+print(example[c("name","allowance")])
+example$allowance <- ordered(example$allowance)
+pick_allowanceOver1000 <- example$allowance >= "1001-2000"
+example$name[pick_allowanceOver1000]
+```
+或在設定為factor時即把levels排好，並ordered=T
+```{r}
+example$allowance <-
+  factor(
+    example$allowance,
+    levels=c("0-1000", "1001-2000", "2000+"),
+    ordered = T # 設定為可排序factor
+  )
+pick_allowanceOver1000 <- example$allowance >= "1001-2000"
+example$name[pick_allowanceOver1000]
+```
+==:等於 !=:不等於 %in%:屬於
+example1-4 誰血型是B型
+```{r}
+print(example[c("name","bloodType")])
+pick_bloodB <- example$bloodType == "B"
+example$name[pick_bloodB]
+```
+example1-5 誰住在大台北地區
+```{r}
+print(example[c("name","residence")])
+set_TaipeiMetro <- c("Taipei","New Taipei")
+pick_fromTaipeiMetro <- example$residence %in% set_TaipeiMetro
+example$name[pick_fromTaipeiMetro]
+```
+example1-5 誰不住在大台北地區(加上!代表否定)
+```{r}
+pick_not_fromTaipeiMetro <- ! pick_fromTaipeiMetro
+# 或
+pick_not_fromTaipeiMetro <- !(example$residence %in% set_TaipeiMetro) # (..) 裡面會先運算完才做外面!的處理
+example$name[pick_not_fromTaipeiMetro]
+```
+example1-6 誰沒有體重資料
+```{r}
+print(example[c("name","weight")])
+pick_na <- is.na(example$weight)
+example$name[pick_na]
+```
+example1-7 誰喜歡美食
+stringr::str_detect() : 字元偵測
+若使用==，代表""內的物件要一模一樣
+```{r}
+print(example[c("name","hobby")])
+pick_loveFood <- stringr::str_detect(example$hobby,"美食")
+example$name[pick_loveFood]
+```
+example2
+```{r}
+source("https://www.dropbox.com/s/qsrw069n94k61lj/transcript100to103_list.R?dl=1")
+```
+```{r}
+str(transcript100to103)
+```
+```{r}
+#各學年大二人數
+table(transcript100to103$`學屆`)
+# 各學年大二學期成績大於85的人數
+pick_above85 <- transcript100to103$`成績` >= 85
+table(transcript100to103$`學屆`[pick_above85])
+```
+example2-1 找出法商學院學生
+```{r}
+levels(factor(transcript100to103$學院))
+unique(transcript100to103$學院)
+```
+```{r}
+set_LawBusiness <- c("商學院","法學院")
+pick_LawBusiness <- transcript100to103$學院 %in% set_LawBusiness
+```
+example3
+```{r}
+source("https://www.dropbox.com/s/16h6ggua6qtydci/exchangeRate.R?dl=1")
+```
+```{r}
+str(exchangeRate)
+```
+#1998年以後的匯率
+```{r}
+pick_after98_01 <- exchangeRate$`期間` >= lubridate::ymd("1998-01-01")
+```
+```{r}
+exchangeRate_after98 <-
+  list(
+    `期間`=exchangeRate$`期間`[pick_after98_01],
+    `幣別`=exchangeRate$`幣別`[pick_after98_01],
+    `匯率`=exchangeRate$`匯率`[pick_after98_01]
+  )
+str(exchangeRate_after98)
+```
+example4
+```{r}
+jsonlite::fromJSON("https://www.dropbox.com/s/3uijub7xheib405/list_victimAges_female.json?dl=1", simplifyDataFrame = F) -> list_victimAges_female
+```
+```{r}
+str(list_victimAges_female)
+View(list_victimAges_female$`數目`)
+```
+#1受害人數:
+```{r}
+sum(list_victimAges_female$`數目`, na.rm=T)
+```
+#2缺失多少資料
+```{r}
+list_victimAges_female$數目 <- as.integer(list_victimAges_female$數目)
+pick_na <- is.na(list_victimAges_female$數目)
+total_na <- sum(pick_na)
+```
+
+example5
+```{r}
+sequenceNums <- c(11, 6, 8, 11, 12, 11, 3, 7, 10, 8)
+pick_evens <- (sequenceNums %% 2) == 0
+sequenceNums[pick_evens]
+```
+example6
+```{r}
+x <- c(1,5,8)
+y <- c(5,8)
+x %in% y # x裡的元素值是不是屬於y集合
+```
+example7
+判斷向量內各元素值是否有NA，可使用is.na()
+R還有一種特別的缺失資料NaN(not a number)，僅用於數字向量，無法用在字串向量
+```{r}
+x2 <- c(1,NA,10)
+y2 <- c(-1,NA,20)
+x3 <- c(NA,"小花")
+y3 <- c(NA,"小華")
+is.na(x2)
+```
+example8
+```{r}
+jsonlite::fromJSON("https://data.ntpc.gov.tw/od/data/api/EDC3AD26-8AE7-4916-A00B-BC6048D19BF8?$format=json") ->
+  garbageRoutes
+```
+```{r}
+typeof(garbageRoutes)  #用typeof()函數查詢電腦實質上如何看待garbageRoutes
+class(garbageRoutes)  #用class()函數查詢電腦把它能進行的操作運算歸屬於哪一類型
+```
+#1垃圾車路線
+```{r}
+factor(garbageRoutes$linename) -> garbageRoutes$linename #透過linename元素判斷垃圾車有幾條路線
+levels(garbageRoutes$linename)
+```
+```{r}
+pick_afternoonRoutes <-
+  stringr::str_detect(
+    garbageRoutes$linename,
+    "下午")
+garbageRoutes$linename[pick_afternoonRoutes]# 由linename創造： 可篩選出下午路線的「要/不要」向量pick_afternoonRoutes
+```
+example9
+```{r}
+fruit <- c("apple", "banana", "pear", "pinapple")
+str_detect(fruit, "a")
+str_detect(fruit, "^a")#starting with
+str_detect(fruit, "a$")#ending with
+str_detect(fruit, "b")
+str_detect(fruit, "[aeiou]")
+```
+```{r}
+# Also vectorised over pattern
+str_detect("aecfg", letters)
+# Returns TRUE if the pattern do NOT match
+str_detect(fruit, "a$", negate = TRUE)
+```
+
