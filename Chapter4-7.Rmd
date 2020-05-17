@@ -1,0 +1,174 @@
+---
+5/13/2020
+Chapter4-7
+---
+levels:順序是根據電腦內字元排序（collating sequence），依辭典序列方式決定排序，很多時候沒有意義
+不同電腦、不同作業系統的collating sequence不同，如果levels順序在你的分析是重要的，一定要在設定factor時自行設定好
+#1
+```{r}
+char1 <- c("Wild","Apple","Donald","May","Avocada") 
+factor1 <- factor(char1)
+levels(factor1)
+```
+#2-1  
+```{r}
+jsonlite::fromJSON("https://od.cdc.gov.tw/eic/Day_Confirmation_Age_County_Gender_19CoV.json") -> covid19
+```
+```{r}
+covid19$`縣市` <- factor(covid19$`縣市`)
+covid19$`性別` <- factor(covid19$`性別`)
+covid19$`是否為境外移入` <- factor(covid19$`是否為境外移入`) #不可排序類別：性別、縣市、是否境外移入
+```
+```{r}
+levels(covid19$`縣市`)
+levels(covid19$`性別`)
+levels(covid19$`是否為境外移入`)
+```
+#2-2
+```{r}
+covid19$`年齡層` <- factor(covid19$`年齡層`,ordered=TRUE)
+levels(covid19$`年齡層`) #可排序類別資料：年齡層
+```
+重新定義factor: factor(目前的factor向量, levels=自訂排序)
+#2-3 依人口數排序
+```{r}
+jsonlite::fromJSON("https://www.dropbox.com/s/jckqryeh5zeat5w/regionPopulation.json?dl=1") -> population
+unlist(population) -> population
+```
+```{r}
+print(population)
+class(population) # 判斷出是named integer vector
+names(population) # 元素名稱是台灣各縣市
+```
+```{r}
+levels(covid19$`縣市`) #是名稱字串向量
+levels(covid19$`縣市`) -> levelsInData #由於population元素值有names，可以用`[名稱字串向量]`取出所要的
+population[levelsInData] -> population
+```
+```{r}
+population <- sort(population, decreasing=T) #population由大排到小 #(sort(x, decreasing=T)可將x numeric vector由大排到小
+population
+```
+```{r}
+newLevels <- names(population) #重設levels排序
+covid19$`縣市` <- factor(covid19$`縣市`, levels=newLevels)
+levels(covid19$`縣市`)
+```
+#2-4 依年齡排序(年齡應該用年齡區間起始數字排序)
+```{r}
+levels(covid19$`年齡層`) #不正確
+```
+```{r}
+level_names <- levels(covid19$`年齡層`)
+startingAges <- stringr::str_extract(level_names,"^[0-9]+") #取出levels中各年齡層的起始數字
+```
+```{r}
+startingAges <- as.integer(startingAges) #將startingAges變成named integer vector
+names(startingAges) <- level_names #幫startingAges取名
+startingAges <- sort(startingAges) #將startingAges從小排到大
+startingAges
+```
+```{r}
+covid19$`年齡層` <- factor(covid19$`年齡層`, names(startingAges)) #重設levels排序
+levels(covid19$`年齡層`)
+```
+#3 由covid19$縣市建立一個地區變數，值為北部、中部、南部、東部 (整併)
+```{r}
+covid19$`地區` <- covid19$`縣市`
+levels(covid19$`地區`)
+
+currentLevels <- levels(covid19$`地區`)
+north_regex <- "宜蘭縣|基隆市|[台臺]北市|新北市|桃園市|新竹市|新竹縣"
+middle_regex <- "苗栗縣|[台臺]中市|彰化縣|南投縣|雲林縣"
+south_regex <-"嘉義市|嘉義縣|[台臺]南[縣市]|高雄市|屏東縣|澎湖縣"
+east_regex <- "花蓮縣|台東縣"
+
+currentLevels <- str_replace(currentLevels, north_regex, "北部")
+currentLevels <- str_replace(currentLevels, middle_regex, "中部")
+currentLevels <- str_replace(currentLevels, south_regex, "南部")
+newLevels <- str_replace(currentLevels, east_regex, "東部") #目前尚未有東部的元素，但先設立levels
+
+levels(covid19$`地區`) <- newLevels
+covid19$`地區`
+```
+#3-2 將covid19$年齡層，由5歲間距成10歲間距，使新的levels為4 < 5-14 < 15-24 < …< 55-64 < 65+
+```{r}
+levels(covid19$`年齡層`) #原先排列方式
+start <- seq(5, 55, by=10) # 由5到55，每個值差10的數值向量
+end <- seq(14, 64, by=10)
+middleLevels <- rep(paste0(start,"-",end), each=2) #每個新間距要出現2次
+newLevels <- c("4", middleLevels, "65+", "65+")
+
+levels(covid19$`年齡層`) <- newLevels
+covid19$`年齡層`
+newLevels
+```
+#4 levels改名: levels(x) <- 想取的名字
+```{r}
+factor1 <- factor(c("A","A","C","A","D","F","D","D"))
+factor1
+levels(factor1) <- c("優","佳","尚可","普")
+factor1
+```
+#4-2 也可以只改levels其中的幾個元素
+```{r}
+levels(factor1)[[1]] <- "Excellent"
+levels(factor1)[c(3,4)] <- c("C","D")
+factor1
+```
+#5 levels整併
+#原本levels是台灣各縣市，想改成北/中/南/東部四類
+```{r}
+factor2 <- factor(c("新北市","台北市","台中市","彰化市","基隆市","苗栗縣","苗栗縣"))
+factor2
+levels(factor2) <- c("中部","北部","北部","中部","北部","中部")
+factor2 
+```
+#5-2 原本年齡層levels是每5歲一個間距，改成10歲一個間距
+```{r}
+factor3 <- factor(c("0-4歲","5-9歲","10歲以上","0-4歲","5-9歲","5-9歲","10歲以上"))
+factor3
+levels(factor3) <- c("0-9歲","10歲以上","0-9歲")
+factor3
+```
+#6 levels擴充 (levels <-右邊值的部份包含原本的外，還有想新增的類別)
+```{r}
+factor4 <- factor(c("好","好","普通","普通", "好"))
+levels(factor4)
+```
+```{r}
+factor4[[6]] <- "差" #新增一筆新資料“差”（之前沒有這項）
+factor4 # 元素6變NA
+```
+```{r}
+levels(factor4) <- c(levels(factor4), "差") #先擴大levels, 再加新資料
+levels(factor4)
+factor4[[6]] <- "差"
+factor4
+```
+```{r}
+levels(factor4)[[4]] <- "尚可" #直接在levels裡新增
+factor4[[7]] <- "尚可"
+factor4
+```
+##factor無法用c(...)把兩個factor vector串接在一起：
+```{r}
+# non factor
+char1 <- c("小明","小美")
+char2 <- c("大雄","技安")
+c(char1, char2)
+# factor
+factor1 <- factor(c("好", "壞", "壞"))
+factor2 <- factor(c("壞", "好", "好"))
+c(factor1, factor2)
+```
+正確接法:
+```{r}
+factor1[4:6] <- factor2 #4:6 :4~6
+factor1
+```
+或使用套件forcats裡的fct_c函數
+```{r}
+forcats::fct_c(factor1, factor2)
+```
+
