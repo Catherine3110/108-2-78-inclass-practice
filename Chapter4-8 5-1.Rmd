@@ -1,0 +1,159 @@
+---
+5/20
+Chapter4-8 5-1
+---
+```{r setup, include=FALSE}
+library(purrr)
+library(stringr)
+```
+#1
+```{r}
+example <- list(
+  name=c("小明","小花","小新","美美"),
+  height=c(175,166,170,160),
+  weight=c(77,NA,60,43),
+  birthday=lubridate::ymd(c("1998-03-11","1999-12-22","1995-08-22","2001-10-10")),
+  hobby=c("美食 旅遊","旅遊 時尚","3C 美食","音樂 旅遊"),
+  residence=c("Taipei","New Taipei","Taichung","Kaohsiung"),
+  allowance=factor(c("0-1000","1001-2000","2000+","1001-2000")),
+  bloodType=c("A","B","B","O")
+)
+```
+拿出其中屬於小新的資料
+```{r pressure, echo=FALSE}
+pick_小新 <- example$name == "小新"
+data_selected <- 
+  list(
+    name=example$name[pick_小新],
+    weight=example$weight[pick_小新],
+    height=example$height[pick_小新],
+    hobby=example$hobby[pick_小新],
+    residence=example$residence[pick_小新],
+    allowance=example$allowance[pick_小新],
+    bloodType=example$bloodType[pick_小新]
+  )
+data_selected
+```
+## map() (map()的用法為：map(對象物件, ~對每個元素作的動作))
+## .x來代表每個元素，即[[1]], [[2]], ..., [[7]]
+## ~代表要形成一個公式(formula)
+對每個元素進行[pick_小新]，可以寫成.x[pick_小新]
+由於.x[pick_小新]是個公式化的動作，要使用~
+等同於
+```{r}
+map(example, ~.x[pick_小新])
+```
+#2-1
+```{r}
+jsonlite::fromJSON("https://www.dropbox.com/s/6252gbdnv9owljm/dance.json?dl=1", simplifyDataFrame = F) -> dance
+```
+```{r}
+dance[[1]]$title #第一個dance表演名稱
+dance[[2]]$title #第二個dance表演名稱
+map(dance, ~.x$title) -> list_titles #得到所有的表演名稱
+```
+#2-2
+```{r}
+dance[[1]]$showInfo #記載第一個表演的所有場次訊息
+str(dance[[1]]$showInfo)
+
+length(dance[[1]]$showInfo) #計算第一個表演有幾個場次
+length(dance[[2]]$showInfo) #計算第二個表演有幾個場次
+map(dance,~length(.x$showInfo)) -> list_numberOfShows #所有表演的總場次量
+```
+#2-3 第5個表演有2個場次，找出它們的日期時間
+```{r}
+dance[[5]]$showInfo[[1]]$time #這個表演第1個場次的日期時間
+map(dance[[5]]$showInfo, ~ .x$time) -> list_showTimes_dance5
+```
+#3
+```{r}
+chr <- c("abaa","accd")
+str_extract_all(chr[[1]], "[ad]")
+str_extract_all(chr[[2]], "[ad]")
+#等同於
+map(chr, ~str_extract_all(.x, "[ad]"))
+```
+#4
+```{r}
+threeHeigths <- c(Gary=178, John=182, Cam=175)
+```
+找出身高最高的
+寫法一:
+```{r}
+sort(threeHeigths, decreasing=T) -> sorted_heights #先排序由大到小
+names(sorted_heights) -> sorted_persons #把排好的人名取出
+sorted_persons[[1]] -> highestPerson #接著取出第一個位置的人名
+```
+寫法二:
+```{r}
+names(sort(threeHeigths, decreasing = T))[[1]] -> highestPerson #無法馬上意會
+```
+寫法三:
+(把 -> 中間物件 換成%>%)
+```{r}
+library(magrittr)
+sort(threeHeigths, decreasing=T) %>% 
+names(.) %>%
+.[[1]] -> highestPerson
+```
+#5 由cities創出每個元素對應的北部、東部、中部region factor
+```{r}
+cities <- factor(c("台北","花蓮","台東","台中"))
+levels(cities)
+```
+```{r}
+region <- cities
+
+# 方法一:一連串的pipe operation
+levels(region) -> currentLevels
+str_replace(currentLevels,"台北","北部") -> currentLevels1
+str_replace(currentLevels1,"花蓮|台東","東部") -> currentLevels2
+str_replace(currentLevels2,"台中","中部") -> regionLevels
+regionLevels -> levels(region)
+# 方法二:
+levels(region) %>% 
+str_replace(.,"台北","北部") %>%
+str_replace(.,"花蓮|台東","東部") %>%
+str_replace(.,"台中","中部") -> levels(region)
+```
+## 若代表中間物件的.在函數的「第一位」則.*可省略不寫，連它後面的,也去掉。小心若不在第一位則不可做省略.動作。
+#6
+```{r}
+population <- c(`cityA`=500,`cityB`=1500, `cityC`=399)
+cities <- c("cityA","cityA","cityB","cityB","cityC")
+```
+```{r}
+names(sort(population)) -> setLevels
+factor(cities, levels = setLevels) -> cities 
+#或
+population %>%  #%>%是把population放到names()的input裡，而非sort()
+  sort() %>%
+  names() %>%
+  factor(cities, levels=.) -> cities
+#或
+population %>% 
+  {names(sort(.))} %>%
+  factor(cities, levels=.) -> cities
+```
+#7 找出元素class為numeric裡那些大於50的數字
+```{r}
+dataList <- list(
+  num=c(2,97,22,15,7),
+  chr=c("2","97","22","15","7")
+)
+```
+```{r}
+map(dataList, ~is.numeric(.x)) -> results
+unlist(results) -> pick_num
+dataList[pick_num] -> num_elements
+num_elements$num > 50 -> pick_big
+num_elements$num[pick_big] -> bignumber
+#或
+map(dataList, is.numeric) %>%
+unlist(.) %>%
+dataList[.] %>%
+{(.[[1]] > 50)} %>%
+num_element[[1]][.] -> bigNumber
+```
+
