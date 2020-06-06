@@ -1,0 +1,127 @@
+---
+6/3/2020
+Chapter5-2
+---
+#1 函數:qd <- 10-5p
+```{r}
+p=1.2 #p=1.2的需求量
+qd <- 10-5*p  #小心是5*p, 不能寫5p
+p=1.3 #p=1.3的需求量
+qd <- 10-5*p
+p=1.4 #p=1.4的需求量
+qd <- 10-5*p
+```
+創造函數:
+```{r}
+demand <- #創造一個物件叫demand
+  function(p){ q_d <- 10-5*p} #定義這個物件為函數
+demand(1.2) #只在腦海想，答案不會列印
+```
+顯示答案:
+```{r}
+demand_return <- 
+  function(p){q_d <- 10-5*p
+              return(q_d)}  #印在螢幕，但Global Environment並不會有q_d
+demand_return(1.2)
+```
+實際上，{...}裡所創造的物件都只是「暫時的」且「不放在global environment」，函數運作完就刪除
+，所以global environment裡就算有同名物件，也不會因函數運作而被不小心更動。
+#2 “Silly，今天天氣如何？”
+```{r}
+#Silly需要知道日期、地點
+dateInput <- lubridate::today()
+locationInput <- "新北市"
+```
+```{r}
+jsonlite::fromJSON("https://opendata.cwb.gov.tw/fileapi/v1/opendataapi/F-C0032-001?Authorization=rdec-key-123-45678-011121314&format=JSON") ->
+  weather_next36hours
+```
+```{r}
+#1 找出符合地點的天氣資訊：weatherAtLocation
+(weather_next36hours$cwbopendata$dataset$location$locationName == locationInput) -> pick_location #可挑出locationInput的「要/不要」向量
+weather_next36hours$cwbopendata$dataset$location$weatherElement[pick_location][[1]] -> weatherAtLocation
+#2 在weatherAtLocation找出符合時間的天氣資訊
+(weatherAtLocation$elementName=="MaxT") ->pick_MaxT
+(weatherAtLocation$elementName=="MinT") ->pick_MinT
+weatherAtLocation$time[pick_MaxT][[1]]$parameter$parameterName[[1]] -> maxT
+weatherAtLocation$time[pick_MinT][[1]]$parameter$parameterName[[1]] -> minT
+
+glue::glue("{locationInput} {dateInput} 氣溫，最高{maxT}度，最低{minT}度。")
+```
+可得Silly天氣預報function
+```{r}
+askSilly_weather <- function(locationInput,dateInput){
+  jsonlite::fromJSON("https://opendata.cwb.gov.tw/fileapi/v1/opendataapi/F-C0032-001?Authorization=rdec-key-123-45678-011121314&format=JSON") ->
+  weather_next36hours
+  
+  (weather_next36hours$cwbopendata$dataset$location$locationName == locationInput) -> pick_location
+  weather_next36hours$cwbopendata$dataset$location$weatherElement[pick_location][[1]] -> weatherAtLocation
+  (weatherAtLocation$elementName=="MaxT") -> pick_MaxT
+  (weatherAtLocation$elementName=="MinT") -> pick_MinT
+  weatherAtLocation$time[pick_MaxT][[1]]$parameter$parameterName[[1]] -> maxT
+  weatherAtLocation$time[pick_MinT][[1]]$parameter$parameterName[[1]] -> minT
+  glue::glue("{locationInput} {dateInput} 氣溫，最高{maxT}度，最低{minT}度。")
+}
+```
+```{r}
+askSilly_weather("臺中市",lubridate::today())
+askSilly_weather("花蓮縣",lubridate::today())
+```
+#3 函數性質
+```{r}
+class(demand_return)
+```
+```{r}
+formals(askSilly_weather) #查詢函數formals arguments的要求
+```
+```{r}
+body(askSilly_weather) #查詢函數主體
+```
+函數可以存在list裡
+```{r}
+learning_topics <- list(
+    subject="函數",
+    date=lubridate::ymd("2020-06-03"),
+    functionsCreated=list(demand=demand_return) #等號右邊是呼叫demand_return的定義值，也就是function(...){...}值定義本身
+  )
+```
+```{r}
+learning_topics$functionsCreated$demand(1.2)
+```
+```{r}
+typeof(demand_return)
+environment(demand_return) #查詢函數執行所要求環境
+codetools::findGlobals(demand_return) #若函數執行需要Global environment已存在某些物件，查詢需要哪些物件
+```
+#比較(lazy evaluation)
+```{r}
+intercept <- 10
+slope <- -5
+myDemand <- function(p){q_d <- intercept + slope*p
+                        return(q_d)}
+```
+```{r}
+environment(myDemand)
+codetools::findGlobals(myDemand)
+```
+```{r}
+rm(intercept, slope) #移除global environment裡的intercept及slope
+myDemand(1.2) # 無法運作
+```
+函數lazy evaluation的特性，讓函數具有隨時可改變運作狀態的彈性，但是該工具若落在電腦知識不足的使用者手上會有誤動global environment而產生運作錯誤的危機
+解決方法:
+```{r}
+myDemand2 <- function(p, intercept=10, slope=-5)
+             {q_d <- intercept + slope*p
+              return(q_d)}
+```
+```{r}
+environment(myDemand2)
+codetools::findGlobals(myDemand2) # 不依靠global env裡的intercept/slope
+```
+```{r}
+myDemand2(1.2)
+myDemand2(1.2, slope=-1)
+myDemand2(1.2, intercept=5, slope=-1.2)
+```
+
